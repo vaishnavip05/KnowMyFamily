@@ -38,11 +38,11 @@ def is_setup_complete():
         return False
 
 # --------------------------------------------------
-# Navigation Helper (STOP FALL-THROUGH)
+# Navigation Helper (CORRECT)
 # --------------------------------------------------
 def go_to(page_name):
     st.session_state.page = page_name
-    st.stop()
+    st.rerun()   # ✅ Force UI refresh
 
 # --------------------------------------------------
 # HOME SCREEN (AFTER SETUP)
@@ -55,6 +55,7 @@ def home_screen():
     st.markdown("### 👨‍👩‍👧 Parent Options")
     if st.button("✏️ Edit Family Setup"):
         go_to("setup")
+        return
 
     st.markdown("---")
 
@@ -66,18 +67,21 @@ def home_screen():
         st.write("Learn names and relationships")
         if st.button("Play", key="meet_family"):
             go_to("meet_my_family")
+            return
 
     with col2:
         st.subheader("🛤️ Find My Family")
         st.write("Follow the path to the right person")
         if st.button("Play", key="find_family"):
             go_to("find_my_family")
+            return
 
     with col3:
         st.subheader("🔊 Who Is Speaking?")
         st.write("Match voices to family members")
         if st.button("Play", key="who_speaking"):
             go_to("who_is_speaking")
+            return
 
 # --------------------------------------------------
 # MAIN APP FLOW
@@ -87,7 +91,7 @@ if st.session_state.page == "setup":
 
 elif not is_setup_complete():
     st.session_state.page = "setup"
-    family_setup_screen(go_to)
+    st.rerun()
 
 elif st.session_state.page == "home":
     home_screen()
