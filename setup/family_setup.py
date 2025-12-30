@@ -7,11 +7,16 @@ DATA_FILE = "data/family_data.json"
 IMAGE_FOLDER = "data/images"
 AUDIO_FOLDER = "data/audio"
 
+
 # --------------------------------------------------
-# Ensure folders exist
+# Ensure folders exist (Streamlit Cloud safe)
 # --------------------------------------------------
-os.makedirs(IMAGE_FOLDER, exist_ok=True)
-os.makedirs(AUDIO_FOLDER, exist_ok=True)
+if not os.path.isdir(IMAGE_FOLDER):
+    os.makedirs(IMAGE_FOLDER)
+
+if not os.path.isdir(AUDIO_FOLDER):
+    os.makedirs(AUDIO_FOLDER)
+
 
 # --------------------------------------------------
 # Load existing family data
