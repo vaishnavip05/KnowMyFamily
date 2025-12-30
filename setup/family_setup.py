@@ -38,34 +38,27 @@ def family_setup_screen(go_to):
     st.write("Add, review, or remove family members used in the games.")
     st.markdown("---")
 
-    # Initialize family data
     if "family_members" not in st.session_state:
         st.session_state.family_members = load_family_data()
 
-    # Initialize form fields (for clearing)
-    if "name_input" not in st.session_state:
-        st.session_state.name_input = ""
-    if "relationship_input" not in st.session_state:
-        st.session_state.relationship_input = ""
+    # ---- form reset key ----
+    if "form_counter" not in st.session_state:
+        st.session_state.form_counter = 0
 
     # -------------------------------
     # Input Form
     # -------------------------------
-    with st.form("add_member_form"):
-        name = st.text_input("Name", key="name_input")
-        relationship = st.text_input(
-            "Relationship (e.g., Mother, Grandpa, Aunt)",
-            key="relationship_input"
-        )
+    with st.form(f"add_member_form_{st.session_state.form_counter}"):
+
+        name = st.text_input("Name")
+        relationship = st.text_input("Relationship (e.g., Mother, Grandpa, Aunt)")
         image_file = st.file_uploader(
             "Upload Photo",
-            type=["jpg", "jpeg", "png"],
-            key="image_input"
+            type=["jpg", "jpeg", "png"]
         )
         audio_file = st.file_uploader(
             "Upload Voice (optional)",
-            type=["mp3", "wav", "ogg"],
-            key="audio_input"
+            type=["mp3", "wav", "ogg"]
         )
 
         submitted = st.form_submit_button("Add Person")
@@ -87,7 +80,6 @@ def family_setup_screen(go_to):
                     with open(audio_path, "wb") as f:
                         f.write(audio_file.getbuffer())
 
-                # Add member
                 st.session_state.family_members.append({
                     "name": name,
                     "relationship": relationship,
@@ -97,13 +89,10 @@ def family_setup_screen(go_to):
 
                 save_family_data(st.session_state.family_members)
 
-                # ---- CLEAR FORM FIELDS ----
-                st.session_state.name_input = ""
-                st.session_state.relationship_input = ""
-                st.session_state.image_input = None
-                st.session_state.audio_input = None
-
                 st.success(f"{name} added successfully!")
+
+                # ---- RESET FORM SAFELY ----
+                st.session_state.form_counter += 1
                 st.experimental_rerun()
 
     st.markdown("---")
@@ -129,7 +118,6 @@ def family_setup_screen(go_to):
                     if os.path.exists(audio_path):
                         st.audio(audio_path)
 
-                # ---- DELETE BUTTON ----
                 if st.button("🗑️ Delete", key=f"delete_{idx}"):
                     st.session_state.family_members.pop(idx)
                     save_family_data(st.session_state.family_members)
