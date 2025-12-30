@@ -5,11 +5,13 @@ from PIL import Image
 
 DATA_FILE = "data/family_data.json"
 IMAGE_FOLDER = "data/images"
+AUDIO_FOLDER = "data/audio"
 
 # --------------------------------------------------
 # Ensure folders exist
 # --------------------------------------------------
 os.makedirs(IMAGE_FOLDER, exist_ok=True)
+os.makedirs(AUDIO_FOLDER, exist_ok=True)
 
 # --------------------------------------------------
 # Load existing family data
@@ -53,6 +55,10 @@ def family_setup_screen(go_to):
             "Upload Photo",
             type=["jpg", "jpeg", "png"]
         )
+        audio_file = st.file_uploader(
+            "Upload Voice (optional)",
+            type=["mp3", "wav", "ogg"]
+        )
 
         submitted = st.form_submit_button("Add Person")
 
@@ -60,17 +66,25 @@ def family_setup_screen(go_to):
             if not name or not image_file:
                 st.warning("Please enter name and upload photo.")
             else:
-                image_path = os.path.join(IMAGE_FOLDER, image_file.name)
-
                 # Save image
+                image_path = os.path.join(IMAGE_FOLDER, image_file.name)
                 with open(image_path, "wb") as f:
                     f.write(image_file.getbuffer())
 
-                # Add to list
+                # Save audio if provided
+                audio_filename = None
+                if audio_file:
+                    audio_filename = audio_file.name
+                    audio_path = os.path.join(AUDIO_FOLDER, audio_filename)
+                    with open(audio_path, "wb") as f:
+                        f.write(audio_file.getbuffer())
+
+                # Add member data
                 st.session_state.family_members.append({
                     "name": name,
                     "relationship": relationship,
-                    "image": image_file.name
+                    "image": image_file.name,
+                    "audio": audio_filename
                 })
 
                 save_family_data(st.session_state.family_members)
@@ -93,6 +107,12 @@ def family_setup_screen(go_to):
                 st.write(f"**{member['name']}**")
                 st.write(member["relationship"])
 
+                # Play voice if available
+                if member.get("audio"):
+                    audio_path = os.path.join(AUDIO_FOLDER, member["audio"])
+                    if os.path.exists(audio_path):
+                        st.audio(audio_path)
+
     st.markdown("---")
 
     # -------------------------------
@@ -101,4 +121,3 @@ def family_setup_screen(go_to):
     if st.session_state.family_members:
         if st.button("✅ Finish Setup"):
             go_to("home")
-
