@@ -92,9 +92,9 @@ def family_setup_screen(go_to):
                 save_family_data(st.session_state.family_members)
                 st.success(f"{name} added successfully!")
 
-                # ✅ RESET FORM CORRECTLY
+                # ✅ RESET FORM + REFRESH UI
                 st.session_state.form_counter += 1
-                st.stop()   # ⬅ THIS LINE FIXES THE ISSUE
+                st.rerun()
 
     st.markdown("---")
 
@@ -122,7 +122,7 @@ def family_setup_screen(go_to):
                 if st.button("🗑️ Delete", key=f"delete_{idx}"):
                     st.session_state.family_members.pop(idx)
                     save_family_data(st.session_state.family_members)
-                    st.stop()
+                    st.rerun()
 
     st.markdown("---")
 
@@ -135,7 +135,9 @@ def family_setup_screen(go_to):
         if st.session_state.family_members:
             if st.button("✅ Finish Setup"):
                 go_to("home")
+                st.rerun()
 
     with col2:
         if st.button("⬅ Back to Home"):
             go_to("home")
+            st.rerun()
