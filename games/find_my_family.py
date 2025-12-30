@@ -7,9 +7,7 @@ from PIL import Image
 DATA_FILE = "data/family_data.json"
 IMAGE_FOLDER = "data/images"
 
-# --------------------------------------------------
-# Load family data
-# --------------------------------------------------
+
 def load_family_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as f:
@@ -17,119 +15,141 @@ def load_family_data():
     return []
 
 
-# --------------------------------------------------
-# Find My Family – NODE PATH GAME
-# --------------------------------------------------
 def find_my_family_screen(go_to):
 
     st.title("🛤️ Find My Family")
-    st.write("Help the child walk step-by-step to the right family member 💙")
     st.markdown("---")
 
     family = load_family_data()
-
     if len(family) < 2:
-        st.warning("Please add at least 2 family members first.")
-        if st.button("⬅ Back to Setup"):
+        st.warning("Please add at least 2 family members.")
+        if st.button("⬅ Back"):
             go_to("setup")
         return
 
-    # --------------------------------------------------
-    # INITIALIZE GAME
-    # --------------------------------------------------
-    if "path_game" not in st.session_state:
+    # -------------------------------
+    # STATE INIT
+    # -------------------------------
+    if "fm_stage" not in st.session_state:
+        st.session_state.fm_stage = "intro"
+
+    # -------------------------------
+    # STAGE 1: SHOW FAMILY
+    # -------------------------------
+    if st.session_state.fm_stage == "intro":
+        st.subheader("👨‍👩‍👧 My Family")
+
+        cols = st.columns(3)
+        for i, m in enumerate(family):
+            with cols[i % 3]:
+                img = os.path.join(IMAGE_FOLDER, m["image"])
+                if os.path.exists(img):
+                    st.image(Image.open(img), width=140)
+                st.write(f"**{m['name']}**")
+                st.write(m["relationship"])
+
+        if st.button("▶ Start Game"):
+            st.session_state.fm_stage = "game"
+            st.rerun()
+
+        if st.button("⬅ Back to Home"):
+            go_to("home")
+        return
+
+    # -------------------------------
+    # STAGE 2: GAME SETUP
+    # -------------------------------
+    if "graph" not in st.session_state:
         target = random.choice(family)
         wrong = random.choice([m for m in family if m != target])
 
-        st.session_state.path_game = {
-            "target": target,
-            "wrong": wrong,
-            "current": 0,
-            "completed": []
+        st.session_state.target = target
+        st.session_state.wrong = wrong
+
+        # Node graph
+        # 0 = start
+        # Correct path: 0 → 1 → 2 → 3 → 4
+        st.session_state.graph = {
+            0: [1, 5],
+            1: [2, 6],
+            2: [3],
+            3: [4],
+            4: ["target", "wrong"]
         }
 
-    game = st.session_state.path_game
-    target = game["target"]
-    wrong = game["wrong"]
+        st.session_state.current = 0
+        st.session_state.visited = [0]
 
-    # --------------------------------------------------
-    # TASK
-    # --------------------------------------------------
+    target = st.session_state.target
+    wrong = st.session_state.wrong
+
     st.info(f"🧒 Task: Give the 🍎 apple to **{target['relationship']} ({target['name']})**")
     st.markdown("---")
 
-    # --------------------------------------------------
-    # DEFINE NODES
-    # --------------------------------------------------
-    # Correct path = 0 → 1 → 2 → 3 → 4
-    correct_nodes = [0, 1, 2, 3, 4]
-    wrong_nodes = [5, 6]
+    # -------------------------------
+    # DRAW PATH
+    # -------------------------------
+    st.subheader("🧭 Choose your path")
 
-    # --------------------------------------------------
-    # PATH VISUALIZATION
-    # --------------------------------------------------
-    st.subheader("🚶 Walking Path")
+    col1, col2, col3 = st.columns([2, 1, 2])
 
-    path_display = ""
-    for i in correct_nodes:
-        if i in game["completed"]:
-            path_display += "🟢━━"
-        else:
-            path_display += "⚪━━"
-    st.markdown(path_display)
+    with col2:
+        for node in range(5):
+            if node in st.session_state.visited:
+                st.markdown("🟢")
+            else:
+                st.markdown("⚪")
 
-    st.markdown("---")
+            if node in st.session_state.graph and node == st.session_state.current:
+                for nxt in st.session_state.graph[node]:
+                    if isinstance(nxt, int):
+                        if st.button(f"➡ Node {nxt}", key=f"n{node}_{nxt}"):
+                            if nxt == node + 1:
+                                st.session_state.visited.append(nxt)
+                                st.session_state.current = nxt
+                                st.success("Good choice!")
+                            else:
+                                st.warning("Try again 🙂")
+                            st.rerun()
 
-    # --------------------------------------------------
-    # NODE SELECTION
-    # --------------------------------------------------
-    st.subheader("Choose where to go next")
-
-    cols = st.columns(3)
-
-    # Correct next node
-    next_correct = game["current"] + 1
-
-    with cols[0]:
-        if next_correct <= 4:
-            if st.button(f"➡️ Go to Node {next_correct}"):
-                game["completed"].append(next_correct)
-                game["current"] = next_correct
-                st.success("Good choice! 👍")
-                st.rerun()
-
-    # Wrong nodes
-    with cols[1]:
-        if st.button("❌ Wrong Path"):
-            st.warning("Oops! That path is blocked. Try again 🙂")
-
-    # --------------------------------------------------
+    # -------------------------------
     # FINAL CHOICE
-    # --------------------------------------------------
-    if game["current"] == 4:
+    # -------------------------------
+    if st.session_state.current == 4:
         st.markdown("---")
-        st.subheader("🔀 Final Choice")
+        st.subheader("🔀 Who should get the apple?")
 
-        col1, col2 = st.columns(2)
+        c1, c2 = st.columns(2)
 
-        with col1:
+        with c1:
             img = os.path.join(IMAGE_FOLDER, target["image"])
             if os.path.exists(img):
                 st.image(Image.open(img), width=150)
             if st.button(f"Give to {target['name']}"):
                 st.balloons()
-                st.success("🎉 Correct! You reached the right person!")
-                del st.session_state.path_game
+                st.success("🎉 Correct! Well done!")
+                reset_find_my_family()
 
-        with col2:
+        with c2:
             img = os.path.join(IMAGE_FOLDER, wrong["image"])
             if os.path.exists(img):
                 st.image(Image.open(img), width=150)
             if st.button(f"Give to {wrong['name']}"):
-                st.error("❌ Wrong person! Try again 🙂")
+                st.error("❌ Oops! Try again 🙂")
 
-    st.markdown("---")
     if st.button("⬅ Back to Home"):
-        if "path_game" in st.session_state:
-            del st.session_state.path_game
+        reset_find_my_family()
         go_to("home")
+
+
+def reset_find_my_family():
+    for k in [
+        "fm_stage",
+        "graph",
+        "current",
+        "visited",
+        "target",
+        "wrong",
+    ]:
+        if k in st.session_state:
+            del st.session_state[k]
