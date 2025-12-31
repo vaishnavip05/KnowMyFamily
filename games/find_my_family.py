@@ -72,7 +72,8 @@ def find_my_family_screen(go_to):
 
         if st.button("▶ Start Game"):
             st.session_state.started = True
-            st.experimental_rerun()
+            st.session_state.msg = ""   # ✅ CLEAR ERROR
+            st.rerun()
 
         if st.button("⬅ Back to Home"):
             go_to("home")
@@ -116,7 +117,7 @@ def find_my_family_screen(go_to):
         st.warning(st.session_state.msg)
 
     # =====================================================
-    # MOVE LOGIC (NO st.stop HERE ❗)
+    # MOVE LOGIC
     # =====================================================
     r, c = st.session_state.pos
 
@@ -157,7 +158,7 @@ def find_my_family_screen(go_to):
         if st.button("🔁 Play Again"):
             for k in ["started", "pos", "target", "msg"]:
                 st.session_state.pop(k, None)
-            st.experimental_rerun()
+            st.rerun()
 
     if st.button("⬅ Back to Home"):
         for k in ["started", "pos", "target", "msg"]:
