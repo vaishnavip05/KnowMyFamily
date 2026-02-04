@@ -2,6 +2,9 @@ import streamlit as st
 import json
 import os
 
+# 🔐 AUTH IMPORT (ADDED)
+from auth import auth_screen
+
 # Import setup and game modules
 from setup.family_setup import family_setup_screen
 from games.meet_my_family import meet_my_family_screen
@@ -17,6 +20,16 @@ st.set_page_config(
 )
 
 DATA_FILE = "data/family_data.json"
+
+# --------------------------------------------------
+# 🔐 AUTH CHECK (ADDED – DO NOT TOUCH ANYTHING BELOW)
+# --------------------------------------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    auth_screen()
+    st.stop()
 
 # --------------------------------------------------
 # Session State Initialization
@@ -56,6 +69,12 @@ def home_screen():
     if st.button("✏️ Edit Family Setup"):
         go_to("setup")
         return
+
+    # ---- Logout (OPTIONAL BUT SAFE)
+    if st.button("🚪 Logout"):
+        for key in ["logged_in", "username", "page"]:
+            st.session_state.pop(key, None)
+        st.rerun()
 
     st.markdown("---")
 
