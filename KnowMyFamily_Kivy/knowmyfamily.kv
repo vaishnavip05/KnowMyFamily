@@ -1,0 +1,27 @@
+<MenuScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 15
+
+        Label:
+            text: "Know My Family"
+            font_size: 32
+            bold: True
+            size_hint_y: 0.2
+
+        Button:
+            text: "Meet My Family"
+            on_press: root.show_meet_family()
+
+        Button:
+            text: "Find My Family"
+            on_press: root.show_find_family()
+
+        Button:
+            text: "Who Is Speaking?"
+            on_press: root.show_who_speaking()
+
+        Button:
+            text: "Exit"
+            on_press: app.stop()
