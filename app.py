@@ -9,7 +9,7 @@ from auth import auth_screen
 from setup.family_setup import family_setup_screen
 from games import meet_my_family
 from games.find_my_family import find_family
-from games.who_is_speaking import who_is_speaking_screen
+from games.who_is_speaking import who_is_speaking
 
 # --------------------------------------------------
 # Page Configuration
