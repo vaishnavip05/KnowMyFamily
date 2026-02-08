@@ -1,121 +1,127 @@
 import streamlit as st
 import json
 import os
+from games.match_game import match_game
 
-from games.meet_my_family import meet_family
-from games.find_my_family import find_family
-from games.who_is_speaking import who_is_speaking
+BASE = os.path.dirname(__file__)
+FAMILY_FILE = os.path.join(BASE, "family_data.json")
+USERS_FILE = os.path.join(BASE, "users.json")
+PHOTO_DIR = os.path.join(BASE, "uploads/photos")
+AUDIO_DIR = os.path.join(BASE, "uploads/audio")
 
-# ---------- File paths ----------
-BASE_DIR = os.path.dirname(__file__)
-USERS_FILE = os.path.join(BASE_DIR, "users.json")
+os.makedirs(PHOTO_DIR, exist_ok=True)
+os.makedirs(AUDIO_DIR, exist_ok=True)
 
-# ---------- Load users ----------
-def load_users():
-    if not os.path.exists(USERS_FILE):
-        return []
-    with open(USERS_FILE, "r") as f:
-        return json.load(f)["users"]
+# ---------------- LOAD DATA ----------------
+def load_family():
+    with open(FAMILY_FILE, "r") as f:
+        return json.load(f)["family"]
 
-# ---------- Save users ----------
-def save_users(users):
-    with open(USERS_FILE, "w") as f:
-        json.dump({"users": users}, f, indent=2)
+def save_family(data):
+    with open(FAMILY_FILE, "w") as f:
+        json.dump({"family": data}, f, indent=2)
 
-# ---------- Authentication ----------
-def authenticate(username, password):
-    users = load_users()
-    for user in users:
-        if user["username"] == username and user["password"] == password:
-            return True
-    return False
+def authenticate(u, p):
+    with open(USERS_FILE) as f:
+        users = json.load(f)["users"]
+    return any(x["username"] == u and x["password"] == p for x in users)
 
-# ---------- Register ----------
-def register_user(username, password):
-    users = load_users()
-
-    for user in users:
-        if user["username"] == username:
-            return False  # user already exists
-
-    users.append({
-        "username": username,
-        "password": password
-    })
-    save_users(users)
-    return True
-
-# ---------- Session ----------
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
+# ---------------- SESSION ----------------
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# ---------- LOGIN PAGE ----------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+# ---------------- LOGIN PAGE ----------------
 if not st.session_state.logged_in:
+    st.title("🔐 Know My Family – Login")
 
-    st.title("🔐 Know My Family")
+    u = st.text_input("Username")
+    p = st.text_input("Password", type="password")
 
-    if st.session_state.page == "login":
-        st.subheader("Login")
+    if st.button("Login"):
+        if authenticate(u, p):
+            st.session_state.logged_in = True
+            st.session_state.page = "home"
+            st.rerun()
+        else:
+            st.error("Invalid credentials")
 
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+# ---------------- HOME PAGE ----------------
+elif st.session_state.page == "home":
+    st.title("👨‍👩‍👧 Family Members")
 
-        if st.button("Login"):
-            if authenticate(username, password):
-                st.session_state.logged_in = True
-                st.success("Login successful")
+    family = load_family()
+    cols = st.columns(3)
+
+    for i, m in enumerate(family):
+        with cols[i % 3]:
+            st.image(m["photo"], use_column_width=True)
+            st.write(f"**{m['name']}**")
+            st.caption(m["relation"])
+            st.audio(m["audio"])
+            if st.button("Delete", key=m["name"]):
+                family.remove(m)
+                save_family(family)
                 st.rerun()
-            else:
-                st.error("Invalid username or password")
-
-        if st.button("Create new account"):
-            st.session_state.page = "register"
-            st.rerun()
-
-    # ---------- REGISTER PAGE ----------
-    else:
-        st.subheader("Register")
-
-        new_username = st.text_input("Choose Username")
-        new_password = st.text_input("Choose Password", type="password")
-
-        if st.button("Register"):
-            if new_username and new_password:
-                if register_user(new_username, new_password):
-                    st.success("Account created. Please login.")
-                    st.session_state.page = "login"
-                    st.rerun()
-                else:
-                    st.error("Username already exists")
-            else:
-                st.warning("Fill all fields")
-
-        if st.button("Back to Login"):
-            st.session_state.page = "login"
-            st.rerun()
-
-# ---------- MAIN APP ----------
-else:
-    st.title("Know My Family")
-    st.write("Choose a game:")
-
-    if st.button("Meet My Family"):
-        st.text(meet_family())
-
-    if st.button("Find My Family"):
-        q, a = find_family()
-        st.write(q)
-        st.success(f"Answer: {a}")
-
-    if st.button("Who Is Speaking"):
-        audio, a = who_is_speaking()
-        st.write(f"Audio file: {audio}")
-        st.success(f"Answer: {a}")
 
     st.divider()
+    if st.button("Start Game"):
+        st.session_state.page = "game"
+        st.rerun()
+
+    if st.button("Parent Setup"):
+        st.session_state.page = "parent"
+        st.rerun()
+
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.session_state.page = "login"
+        st.rerun()
+
+# ---------------- PARENT SETUP ----------------
+elif st.session_state.page == "parent":
+    st.title("👨‍👩‍👧 Family Setup (Parent Section)")
+
+    name = st.text_input("Name")
+    relation = st.text_input("Relationship")
+    photo = st.file_uploader("Upload Photo", ["jpg","png"])
+    audio = st.file_uploader("Upload Voice", ["mp3","wav"])
+
+    if st.button("Add Person"):
+        if name and relation and photo and audio:
+            photo_path = f"uploads/photos/{photo.name}"
+            audio_path = f"uploads/audio/{audio.name}"
+
+            with open(photo_path, "wb") as f:
+                f.write(photo.getbuffer())
+            with open(audio_path, "wb") as f:
+                f.write(audio.getbuffer())
+
+            family = load_family()
+            family.append({
+                "name": name,
+                "relation": relation,
+                "photo": photo_path,
+                "audio": audio_path
+            })
+            save_family(family)
+            st.success("Member added")
+
+    if st.button("Back to Home"):
+        st.session_state.page = "home"
+        st.rerun()
+
+# ---------------- GAME PAGE ----------------
+elif st.session_state.page == "game":
+    family = load_family()
+    match_game(family)
+
+    if st.button("Back to Home"):
+        st.session_state.page = "home"
+        st.rerun()
+
 
     if st.button("Logout"):
         st.session_state.logged_in = False
