@@ -3,11 +3,12 @@ import json
 import os
 from games.match_game import match_game
 
-BASE = os.path.dirname(__file__)
-USERS_FILE = os.path.join(BASE, "users.json")
-FAMILY_FILE = os.path.join(BASE, "family_data.json")
+# ---------------- PATHS ----------------
+BASE_DIR = os.path.dirname(__file__)
+USERS_FILE = os.path.join(BASE_DIR, "users.json")
+FAMILY_FILE = os.path.join(BASE_DIR, "family_data.json")
 
-# ---------- UTILITIES ----------
+# ---------------- HELPERS ----------------
 def load_users():
     if not os.path.exists(USERS_FILE):
         return []
@@ -35,7 +36,11 @@ def register_user(username, password):
     })
     save_users(users)
 
-# ---------- SESSION ----------
+def load_family():
+    with open(FAMILY_FILE, "r") as f:
+        return json.load(f)["family"]
+
+# ---------------- SESSION STATE ----------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -45,7 +50,7 @@ if "page" not in st.session_state:
 if "current_user" not in st.session_state:
     st.session_state.current_user = None
 
-# ---------- LOGIN / REGISTER ----------
+# ---------------- LOGIN / REGISTER PAGE ----------------
 if not st.session_state.logged_in:
     st.title("🔐 Know My Family")
 
@@ -69,8 +74,8 @@ if not st.session_state.logged_in:
             st.session_state.page = "register"
             st.rerun()
 
-    else:
-        st.subheader("Register (Create Account)")
+    else:  # REGISTER PAGE
+        st.subheader("Register")
 
         new_user = st.text_input("Choose Username")
         new_pass = st.text_input("Choose Password", type="password")
@@ -90,10 +95,9 @@ if not st.session_state.logged_in:
             st.session_state.page = "login"
             st.rerun()
 
-# ---------- HOME (AFTER LOGIN) ----------
-else:
+# ---------------- HOME PAGE ----------------
+elif st.session_state.page == "home":
     st.title(f"👨‍👩‍👧 Welcome, {st.session_state.current_user}")
-
     st.write("Choose a game:")
 
     if st.button("Start Match Game"):
@@ -106,11 +110,12 @@ else:
         st.session_state.page = "login"
         st.rerun()
 
-# ---------- GAME PAGE ----------
+# ---------------- GAME PAGE (THIS IS WHERE YOUR CODE GOES) ----------------
 elif st.session_state.logged_in and st.session_state.page == "game":
     family = load_family()          # ✅ LOAD DATA
-    match_game(family)              # ✅ PASS DATA
+    match_game(family)              # ✅ PASS DATA TO GAME
 
     if st.button("Back to Home"):
         st.session_state.page = "home"
         st.rerun()
+
