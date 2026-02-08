@@ -1,125 +1,23 @@
 import streamlit as st
-import json
-import os
 
-# 🔐 AUTH IMPORT (ADDED)
-from auth import auth_screen
-
-# Import setup and game modules
-from setup.family_setup import family_setup_screen
-from games import meet_my_family
+from games.meet_my_family import meet_family
 from games.find_my_family import find_family
 from games.who_is_speaking import who_is_speaking
 
-# --------------------------------------------------
-# Page Configuration
-# --------------------------------------------------
-st.set_page_config(
-    page_title="Know My Family",
-    layout="wide"
-)
+st.title("Know My Family")
 
-DATA_FILE = "data/family_data.json"
+st.write("Choose a game:")
 
-# --------------------------------------------------
-# 🔐 AUTH CHECK (ADDED – DO NOT TOUCH ANYTHING BELOW)
-# --------------------------------------------------
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+if st.button("Meet My Family"):
+    result = meet_family()
+    st.text(result)
 
-if not st.session_state.logged_in:
-    auth_screen()
-    st.stop()
+if st.button("Find My Family"):
+    question, answer = find_family()
+    st.write(question)
+    st.success(f"Answer: {answer}")
 
-# --------------------------------------------------
-# Session State Initialization
-# --------------------------------------------------
-if "page" not in st.session_state:
-    st.session_state.page = "setup"
-
-# --------------------------------------------------
-# Helper: Check if family data exists
-# --------------------------------------------------
-def is_setup_complete():
-    if not os.path.exists(DATA_FILE):
-        return False
-    try:
-        with open(DATA_FILE, "r") as f:
-            data = json.load(f)
-        return len(data) > 0
-    except:
-        return False
-
-# --------------------------------------------------
-# Navigation Helper (CORRECT)
-# --------------------------------------------------
-def go_to(page_name):
-    st.session_state.page = page_name
-    st.rerun()   # ✅ Force UI refresh
-
-# --------------------------------------------------
-# HOME SCREEN (AFTER SETUP)
-# --------------------------------------------------
-def home_screen():
-    st.title("Know My Family")
-    st.write("Learn your family through simple and friendly games 💙")
-
-    # ---- Parent option to edit setup ----
-    st.markdown("### 👨‍👩‍👧 Parent Options")
-    if st.button("✏️ Edit Family Setup"):
-        go_to("setup")
-        return
-
-    # ---- Logout (OPTIONAL BUT SAFE)
-    if st.button("🚪 Logout"):
-        for key in ["logged_in", "username", "page"]:
-            st.session_state.pop(key, None)
-        st.rerun()
-
-    st.markdown("---")
-
-    # ---- Games Section ----
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.subheader("👨‍👩‍👧 Meet My Family")
-        st.write("Learn names and relationships")
-        if st.button("Play", key="meet_family"):
-            go_to("meet_my_family")
-            return
-
-    with col2:
-        st.subheader("🛤️ Find My Family")
-        st.write("Follow the path to the right person")
-        if st.button("Play", key="find_family"):
-            go_to("find_my_family")
-            return
-
-    with col3:
-        st.subheader("🔊 Who Is Speaking?")
-        st.write("Match voices to family members")
-        if st.button("Play", key="who_speaking"):
-            go_to("who_is_speaking")
-            return
-
-# --------------------------------------------------
-# MAIN APP FLOW
-# --------------------------------------------------
-if st.session_state.page == "setup":
-    family_setup_screen(go_to)
-
-elif not is_setup_complete():
-    st.session_state.page = "setup"
-    st.rerun()
-
-elif st.session_state.page == "home":
-    home_screen()
-
-elif st.session_state.page == "meet_my_family":
-    meet_my_family_screen(go_to)
-
-elif st.session_state.page == "find_my_family":
-    find_my_family_screen(go_to)
-
-elif st.session_state.page == "who_is_speaking":
-    who_is_speaking_screen(go_to)
+if st.button("Who Is Speaking"):
+    audio, answer = who_is_speaking()
+    st.write(f"Audio file: {audio}")
+    st.success(f"Answer: {answer}")
