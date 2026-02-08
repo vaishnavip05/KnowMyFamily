@@ -119,13 +119,16 @@ elif st.session_state.page == "parent":
     relation = st.text_input("Relationship")
     photo = st.file_uploader("Upload Photo", ["jpg","png"])
     audio = st.file_uploader("Upload Voice", ["mp3","wav"])
-
-    if st.button("Add Person"):
+if st.button("Add Person"):
+    if not name or not relation or not photo or not audio:
+        st.error("Please fill all fields and upload photo and voice")
+    else:
         photo_path = f"uploads/photos/{photo.name}"
         audio_path = f"uploads/audio/{audio.name}"
 
         with open(os.path.join(BASE, photo_path), "wb") as f:
             f.write(photo.getbuffer())
+
         with open(os.path.join(BASE, audio_path), "wb") as f:
             f.write(audio.getbuffer())
 
@@ -136,9 +139,11 @@ elif st.session_state.page == "parent":
             "photo": photo_path,
             "audio": audio_path
         })
+
         save_family(family)
-        st.success("Member added")
+        st.success("Family member added successfully")
         st.rerun()
+
 
     if st.button("Back to Home"):
         st.session_state.page = "home"
