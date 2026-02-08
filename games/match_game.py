@@ -1,20 +1,29 @@
 import streamlit as st
-import random
+import os
 
 def match_game(family):
     st.subheader("🎮 Match the Name to the Photo")
 
-    names = [m["name"] for m in family]
-    random.shuffle(names)
+    if not family:
+        st.warning("No family data found")
+        return
 
-    cols = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with cols[0]:
+    with col1:
         st.write("### Names")
-        for name in names:
-            st.button(name, key=f"name_{name}")
+        for m in family:
+            st.button(m["name"], key=f"name_{m['name']}")
 
-    with cols[1]:
+    with col2:
         st.write("### Photos")
         for m in family:
-            st.image(m["photo"], use_column_width=True)
+            photo_path = m.get("photo", "")
+
+            # Resolve absolute path
+            abs_path = os.path.join(os.getcwd(), photo_path)
+
+            if os.path.exists(abs_path):
+                st.image(abs_path, use_column_width=True)
+            else:
+                st.warning(f"Image not found for {m['name']}")
