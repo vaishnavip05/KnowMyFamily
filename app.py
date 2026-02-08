@@ -107,10 +107,10 @@ else:
         st.rerun()
 
 # ---------- GAME PAGE ----------
-if st.session_state.logged_in and st.session_state.page == "game":
-    match_game([])  # you can connect family data here
+elif st.session_state.logged_in and st.session_state.page == "game":
+    family = load_family()          # ✅ LOAD DATA
+    match_game(family)              # ✅ PASS DATA
 
     if st.button("Back to Home"):
         st.session_state.page = "home"
         st.rerun()
-
