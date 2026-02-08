@@ -1,16 +1,3 @@
 {
-  "family": [
-    {
-      "name": "Ana",
-      "relation": "Mom",
-      "photo": "uploads/photos/ana.jpg",
-      "audio": "uploads/audio/ana.mp3"
-    },
-    {
-      "name": "John",
-      "relation": "Grandpa",
-      "photo": "uploads/photos/john.jpg",
-      "audio": "uploads/audio/john.mp3"
-    }
-  ]
+  "family": []
 }
