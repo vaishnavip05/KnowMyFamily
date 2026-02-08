@@ -1,19 +1,16 @@
 {
   "family": [
     {
-      "relation": "Father",
-      "name": "Ramesh",
-      "audio": "father.mp3"
+      "name": "Ana",
+      "relation": "Mom",
+      "photo": "uploads/photos/ana.jpg",
+      "audio": "uploads/audio/ana.mp3"
     },
     {
-      "relation": "Mother",
-      "name": "Sita",
-      "audio": "mother.mp3"
-    },
-    {
-      "relation": "Brother",
-      "name": "Arjun",
-      "audio": "brother.mp3"
+      "name": "John",
+      "relation": "Grandpa",
+      "photo": "uploads/photos/john.jpg",
+      "audio": "uploads/audio/john.mp3"
     }
   ]
 }
