@@ -5,25 +5,39 @@ def match_game(family):
     st.subheader("🎮 Match the Name to the Photo")
 
     if not family:
-        st.warning("No family data found")
+        st.info("No family members found")
         return
 
-    col1, col2 = st.columns(2)
+    # Layout exactly like old version
+    names_col, photos_col = st.columns([1, 2])
 
-    with col1:
-        st.write("### Names")
-        for m in family:
-            st.button(m["name"], key=f"name_{m['name']}")
+    # ---------- LEFT SIDE: NAMES ----------
+    with names_col:
+        st.markdown("### Names")
+        for member in family:
+            st.button(member["name"], key=f"name_{member['name']}")
 
-    with col2:
-        st.write("### Photos")
-        for m in family:
-            photo_path = m.get("photo", "")
+    # ---------- RIGHT SIDE: PHOTOS ----------
+    with photos_col:
+        st.markdown("### Photos")
 
-            # Resolve absolute path
-            abs_path = os.path.join(os.getcwd(), photo_path)
+        photo_cols = st.columns(3)  # grid like old UI
 
-            if os.path.exists(abs_path):
-                st.image(abs_path, use_column_width=True)
-            else:
-                st.warning(f"Image not found for {m['name']}")
+        for idx, member in enumerate(family):
+            with photo_cols[idx % 3]:
+                photo_path = member.get("photo", "")
+
+                abs_path = os.path.join(os.getcwd(), photo_path)
+
+                if os.path.exists(abs_path):
+                    st.image(abs_path, use_column_width=True)
+                else:
+                    st.image(
+                        "https://via.placeholder.com/150?text=No+Image",
+                        use_column_width=True
+                    )
+
+                st.button(
+                    "Select Photo",
+                    key=f"select_{member['name']}"
+                )
