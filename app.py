@@ -143,7 +143,9 @@ if st.button("Add Person"):
         save_family(family)
         st.success("Family member added successfully")
         st.rerun()
-
+if st.button("Back to Home"):
+        st.session_state.page = "home"
+        st.rerun()
 
 # ================= GAMES =================
 elif st.session_state.page == "game":
